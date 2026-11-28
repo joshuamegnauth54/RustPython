@@ -37,10 +37,13 @@ pub use windows::{StatStruct, fstat};
 
 #[cfg(not(windows))]
 pub fn fstat(fd: crate::crt_fd::Borrowed<'_>) -> std::io::Result<StatStruct> {
-    // Unlike a directory fd, fstat accepts no negative descriptor sentinels.
+    // Rustix debug asserts that the FD isn't certain values. We can avoid the double check as well
+    // as the panic by just checking if the FD is > 0 in debug builds ourselves.
+    #[cfg(debug_assertions)]
     if fd.as_raw() < 0 {
         return Err(std::io::Error::from_raw_os_error(libc::EBADF));
     }
+    // `fstat` returns EBADF on invalid file descriptors, including negative FDs
     rustix::fs::fstat(fd).map_err(Into::into)
 }
 
