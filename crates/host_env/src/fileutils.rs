@@ -10,7 +10,7 @@ pub fn is_valid_fd(fd: i32) -> bool {
         return false;
     }
     cfg_select! {
-        any(target_os = "linux", target_os = "android", target_vendor = "apple") => {
+        all(unix, not(target_os = "wasi")) => {
             crate::fcntl::validate_fd(fd).is_ok()
         }
         windows => {
